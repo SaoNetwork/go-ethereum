@@ -158,9 +158,9 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	txs := make([]*types.Transaction, len(body.Transactions))
 	for i, tx := range body.Transactions {
 		if tx.From != nil {
-			setSenderFromServer(tx.tx, *tx.From, body.Hash)
+			setSenderFromServer(tx.Tx, *tx.From, body.Hash)
 		}
-		txs[i] = tx.tx
+		txs[i] = tx.Tx
 	}
 	return types.NewBlockWithHeader(head).WithBody(txs, uncles), nil
 }
@@ -187,7 +187,7 @@ func (ec *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.H
 }
 
 type RPCTransaction struct {
-	tx *types.Transaction
+	Tx *types.Transaction
 	TxExtraInfo
 }
 
@@ -198,7 +198,7 @@ type TxExtraInfo struct {
 }
 
 func (tx *RPCTransaction) UnmarshalJSON(msg []byte) error {
-	if err := json.Unmarshal(msg, &tx.tx); err != nil {
+	if err := json.Unmarshal(msg, &tx.Tx); err != nil {
 		return err
 	}
 	return json.Unmarshal(msg, &tx.TxExtraInfo)
@@ -212,13 +212,13 @@ func (ec *Client) TransactionByHash(ctx context.Context, hash common.Hash) (tx *
 		return nil, false, err
 	} else if json == nil {
 		return nil, false, ethereum.NotFound
-	} else if _, r, _ := json.tx.RawSignatureValues(); r == nil {
+	} else if _, r, _ := json.Tx.RawSignatureValues(); r == nil {
 		return nil, false, fmt.Errorf("server returned transaction without signature")
 	}
 	if json.From != nil && json.BlockHash != nil {
-		setSenderFromServer(json.tx, *json.From, *json.BlockHash)
+		setSenderFromServer(json.Tx, *json.From, *json.BlockHash)
 	}
-	return json.tx, json.BlockNumber == nil, nil
+	return json.Tx, json.BlockNumber == nil, nil
 }
 
 // TransactionByHash returns the RPCTransaction with the given hash.
@@ -229,11 +229,11 @@ func (ec *Client) ExtraTransactionByHash(ctx context.Context, hash common.Hash) 
 		return nil, false, err
 	} else if json == nil {
 		return nil, false, ethereum.NotFound
-	} else if _, r, _ := json.tx.RawSignatureValues(); r == nil {
+	} else if _, r, _ := json.Tx.RawSignatureValues(); r == nil {
 		return nil, false, fmt.Errorf("server returned transaction without signature")
 	}
 	if json.From != nil && json.BlockHash != nil {
-		setSenderFromServer(json.tx, *json.From, *json.BlockHash)
+		setSenderFromServer(json.Tx, *json.From, *json.BlockHash)
 	}
 	return json, json.BlockNumber == nil, nil
 }
@@ -279,13 +279,13 @@ func (ec *Client) TransactionInBlock(ctx context.Context, blockHash common.Hash,
 	}
 	if json == nil {
 		return nil, ethereum.NotFound
-	} else if _, r, _ := json.tx.RawSignatureValues(); r == nil {
+	} else if _, r, _ := json.Tx.RawSignatureValues(); r == nil {
 		return nil, fmt.Errorf("server returned transaction without signature")
 	}
 	if json.From != nil && json.BlockHash != nil {
-		setSenderFromServer(json.tx, *json.From, *json.BlockHash)
+		setSenderFromServer(json.Tx, *json.From, *json.BlockHash)
 	}
-	return json.tx, err
+	return json.Tx, err
 }
 
 // TransactionReceipt returns the receipt of a transaction by transaction hash.
